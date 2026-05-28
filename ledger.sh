@@ -1,277 +1,104 @@
 #!/bin/bash
-# Off-The-Grid Encrypted Ledger Utility
+source .env
 
-DATA_FILE=".secure_ledger.dat"
+# Initialize data containers silently if missing
+touch "$DATA_FILE"
+touch .ledger_verify 2>/dev/null
 
 clear
-echo "=================================================="
-echo "      SECURE LEDGER MULTI-TASK PIPELINE          "
-echo "=================================================="
-echo "1. Write Encrypted Entry to Ledger"
-echo "2. Read and Decrypt Full Ledger"
-echo "=================================================="
-read -p "Select operational vector [1-2]: " MODE
+echo "========================================================="
+echo "          ORB CORE HARDENED SECURITY LEDGER             "
+echo "========================================================="
+echo "1. Write New Verified Transaction Entry"
+echo "2. Decrypt and Read Secure Ledger Stream"
+echo "3. Return to Master Control Deck"
+echo "========================================================="
+echo -n "Select operational vector [1-3]: "
+read op
 
-if [ "$MODE" == "1" ]; then
-    read -p "Enter account log/transaction text: " ENTRY
-    read -sp "Enter Master Encryption Key: " KEY
-    echo ""
-    
-    # Timestamp the entry and encrypt it inline using ChaCha20
-    TIMESTAMP=$(date +"%Y-%m-%d %T")
-    COMPLETE_STRING="[$TIMESTAMP] $ENTRY"
-    
-    # Append the encrypted string as a clean, isolated row
-    echo "$COMPLETE_STRING" | openssl enc -chacha20 -a -pbkdf2 -pass "pass:$KEY" >> "$DATA_FILE"
-    echo "Entry successfully locked into database matrix."
+# =========================================================
+# OPERATIONAL VECTOR 1: WRITE & APPEND WITH VERIFICATION
+# =========================================================
+if [ "$op" -eq 1 ]; then
+    echo -e "\nEnter your system log text or data entry:"
+    read -r user_entry
 
-elif [ "$MODE" == "2" ]; then
-    if [ ! -f "$DATA_FILE" ]; then
-        echo "Error: Database matrix is currently empty."
+    TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
+    LOG_LINE="[$TIMESTAMP] $user_entry"
+
+    echo -n "Set Secret Transaction Passphrase: "
+    read -s password
+    echo
+
+    # Integrity Check: Verify key if database already has a history
+    if [ -s .ledger_verify ] && [ -s "$DATA_FILE" ]; then
+        VERIFY_CHECK=$(openssl enc -chacha20 -d -salt -pbkdf2 -in .ledger_verify -pass pass:"$password" 2>/dev/null)
+        if [ "$VERIFY_CHECK" != "VERIFIED" ]; then
+            echo -e "\n[!] CRITICAL ERROR: Access Denied. Master Key Mismatch."
+            echo "Transaction aborted to protect storage matrix integrity."
+            echo "Press [Enter] to exit..." ; read
+            exit 1
+        fi
+    fi
+
+    # Create dynamic backup fail-safe snapshot
+    if [ -s "$DATA_FILE" ]; then
+        cp "$DATA_FILE" "$DATA_FILE.bak"
+        EXISTING_DATA=$(openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" -pass pass:"$password" 2>/dev/null)
+    else
+        EXISTING_DATA=""
+    fi
+
+    # Append new log line and re-lock the vault cleanly
+    echo -e "${EXISTING_DATA}\n${LOG_LINE}" | sed '/^$/d' | openssl enc -chacha20 -salt -pbkdf2 -out "$DATA_FILE" -pass pass:"$password"
+    
+    # Update/Generate hidden key verification block
+    echo "VERIFIED" | openssl enc -chacha20 -salt -pbkdf2 -out .ledger_verify -pass pass:"$password"
+
+    # Wipe memory snapshot trace
+    rm -f "$DATA_FILE.bak"
+
+    echo -e "\n[ SUCCESS ] Entry encrypted and synchronized to ledger storage."
+    echo "Press [Enter] to return..." ; read
+
+# =========================================================
+# OPERATIONAL VECTOR 2: DECRYPT & SECURE VIEWPORT
+# =========================================================
+elif [ "$op" -eq 2 ]; then
+    if [ ! -s "$DATA_FILE" ]; then
+        echo -e "\n[!] Error: Storage vault matrix is currently empty."
+        echo "Press [Enter] to return..." ; read
         exit 1
     fi
+
+    echo -n -e "\nEnter Secret Master Passphrase to decrypt data: "
+    read -s password
+    echo
+
+    # Verify key integrity before revealing records
+    VERIFY_CHECK=$(openssl enc -chacha20 -d -salt -pbkdf2 -in .ledger_verify -pass pass:"$password" 2>/dev/null)
+    if [ "$VERIFY_CHECK" != "VERIFIED" ]; then
+        echo -e "\n[!] CRITICAL ERROR: Access Denied. Master Key Mismatch."
+        echo "Press [Enter] to return..." ; read
+        exit 1
+    fi
+
+    echo -e "\n=================== DECRYPTED LEDGER LOGS ==================="
+    openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" -pass pass:"$password" 2>/dev/null
+    echo "============================================================="
     
-    read -sp "Enter Master Decryption Key: " KEY
-    echo -e "\n\n--- DECRYPTED LEDGER LOGS ---"
+    echo "Press [Enter] to flush decrypted memory stream from viewport..." ; read
     
-    # Decrypt the storage file stream line-by-line
-    while read -r line; do
-        echo "$line" | openssl enc -chacha20 -d -a -pbkdf2 -pass "pass:$KEY" 2>/dev/null
-    done < "$DATA_FILE"
-    echo "-----------------------------"
+    # Security Hygiene: Hard wipe terminal so no plaintext log remains in history
+    clear
+
+# =========================================================
+# OPERATIONAL VECTOR 3: EXIT CONTROL DECK
+# =========================================================
+elif [ "$op" -eq 3 ]; then
+    echo -e "\n[*] Returning to Master Control Deck..."
+    exit 0
 else
-    echo "Invalid vector signature."
+    echo -e "\n[!] Invalid vector signature."
+    echo "Press [Enter] to try again..." ; read
 fi
-
-#!/bin/bash
-source .env
-
-# Touch database file if it doesn't exist
-touch "$DATA_FILE"
-
-clear
-echo "========================================================="
-echo "          ENCRYPTED SECURITY LEDGER DATABASE            "
-echo "========================================================="
-echo "1. Write New Timestamped Entry"
-echo "2. Decrypt and Read Ledger Logs"
-echo "3. Return to Master Control Deck"
-echo "========================================================="
-echo -n "Select operation [1-3]: "
-read op
-
-if [ "$op" -eq 1 ]; then
-    echo -e "\nEnter your security or system log entry below:"
-    read -r user_entry
-    
-    TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
-    LOG_LINE="[$TIMESTAMP] $user_entry"
-    
-    echo -n "Enter Master Passphrase to lock transaction: "
-    read -s password
-    echo
-    
-    # Temporarily read existing, append new line, and encrypt the bundle
-    (echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null; echo "$LOG_LINE") | \
-    openssl enc -chacha20 -salt -pbkdf2 -out "$DATA_FILE.tmp" -pass stdin
-    
-    mv "$DATA_FILE.tmp" "$DATA_FILE"
-    echo "Transaction locked and synced to encrypted storage securely."
-    echo "Press [Enter] to continue..." ; read
-
-elif [ "$op" -eq 2 ]; then
-    echo -n -e "\nEnter Master Passphrase to decrypt database: "
-    read -s password
-    echo
-    
-    echo -e "\n=================== DECRYPTED LEDGER LOGS ==================="
-    echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null
-    echo "============================================================="
-    echo "Press [Enter] to clear decrypted memory stream..." ; read
-fi
-
-#!/bin/bash
-source .env
-
-# Initialize data container silently if missing
-touch "$DATA_FILE"
-
-clear
-echo "========================================================="
-echo "          ENCRYPTED SECURITY LEDGER DATABASE            "
-echo "========================================================="
-echo "1. Write New Timestamped Log Entry"
-echo "2. Decrypt and Read Ledger Stream"
-echo "3. Return to Master Control Deck"
-echo "========================================================="
-echo -n "Select operational vector [1-3]: "
-read op
-
-if [ "$op" -eq 1 ]; then
-    echo -e "\nEnter your system log text or data entry:"
-    read -r user_entry
-    
-    TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
-    LOG_LINE="[$TIMESTAMP] $user_entry"
-    
-    echo -n "Set Secret Transaction Passphrase: "
-    read -s password
-    echo
-    
-    # Extract, append, and re-lock the secure ledger binary file
-    (echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null; echo "$LOG_LINE") | \
-    openssl enc -chacha20 -salt -pbkdf2 -out "$DATA_FILE.tmp" -pass stdin 2>/dev/null
-    
-    mv "$DATA_FILE.tmp" "$DATA_FILE"
-    echo -e "\n[ SUCCESS ] Entry encrypted and synchronized to ledger storage."
-    echo "Press [Enter] to return..." ; read
-
-elif [ "$op" -eq 2 ]; then
-    echo -n -e "\nEnter Secret Master Passphrase to decrypt data: "
-    read -s password
-    echo
-    
-    echo -e "\n=================== DECRYPTED LEDGER LOGS ==================="
-    echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null
-    echo "============================================================="
-    echo "Press [Enter] to flush decrypted memory stream..." ; read
-fi
-#!/bin/bash
-source .env
-
-# Initialize data container silently if missing
-touch "$DATA_FILE"
-
-clear
-echo "========================================================="
-echo "          ENCRYPTED SECURITY LEDGER DATABASE            "
-echo "========================================================="
-echo "1. Write New Timestamped Log Entry"
-echo "2. Decrypt and Read Ledger Stream"
-echo "3. Return to Master Control Deck"
-echo "========================================================="
-echo -n "Select operational vector [1-3]: "
-read op
-
-if [ "$op" -eq 1 ]; then
-    echo -e "\nEnter your system log text or data entry:"
-    read -r user_entry
-    
-    TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
-    LOG_LINE="[$TIMESTAMP] $user_entry"
-    
-    echo -n "Set Secret Transaction Passphrase: "
-    read -s password
-    echo
-    
-    # Extract, append, and re-lock the secure ledger binary file
-    (echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null; echo "$LOG_LINE") | \
-    openssl enc -chacha20 -salt -pbkdf2 -out "$DATA_FILE.tmp" -pass stdin 2>/dev/null
-    
-    mv "$DATA_FILE.tmp" "$DATA_FILE"
-    echo -e "\n[ SUCCESS ] Entry encrypted and synchronized to ledger storage."
-    echo "Press [Enter] to return..." ; read
-
-elif [ "$op" -eq 2 ]; then
-    echo -n -e "\nEnter Secret Master Passphrase to decrypt data: "
-    read -s password
-    echo
-    
-    echo -e "\n=================== DECRYPTED LEDGER LOGS ==================="
-    echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null
-    echo "============================================================="
-    echo "Press [Enter] to flush decrypted memory stream..." ; read
-fi
-#!/bin/bash
-source .env
-
-# Initialize data container silently if missing
-touch "$DATA_FILE"
-
-clear
-echo "========================================================="
-echo "          ENCRYPTED SECURITY LEDGER DATABASE            "
-echo "========================================================="
-echo "1. Write New Timestamped Log Entry"
-echo "2. Decrypt and Read Ledger Stream"
-echo "3. Return to Master Control Deck"
-echo "========================================================="
-echo -n "Select operational vector [1-3]: "
-read op
-
-if [ "$op" -eq 1 ]; then
-    echo -e "\nEnter your system log text or data entry:"
-    read -r user_entry
-    
-    TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
-    LOG_LINE="[$TIMESTAMP] $user_entry"
-    
-    echo -n "Set Secret Transaction Passphrase: "
-    read -s password
-    echo
-    
-    # Extract, append, and re-lock the secure ledger binary file
-    (echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null; echo "$LOG_LINE") | \
-    openssl enc -chacha20 -salt -pbkdf2 -out "$DATA_FILE.tmp" -pass stdin 2>/dev/null
-    
-    mv "$DATA_FILE.tmp" "$DATA_FILE"
-    echo -e "\n[ SUCCESS ] Entry encrypted and synchronized to ledger storage."
-    echo "Press [Enter] to return..." ; read
-
-elif [ "$op" -eq 2 ]; then
-    echo -n -e "\nEnter Secret Master Passphrase to decrypt data: "
-    read -s password
-    echo
-    
-    echo -e "\n=================== DECRYPTED LEDGER LOGS ==================="
-    echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null
-    echo "============================================================="
-    echo "Press [Enter] to flush decrypted memory stream..." ; read
-fi
-#!/bin/bash
-source .env
-
-# Initialize data container silently if missing
-touch "$DATA_FILE"
-
-clear
-echo "========================================================="
-echo "          ENCRYPTED SECURITY LEDGER DATABASE            "
-echo "========================================================="
-echo "1. Write New Timestamped Log Entry"
-echo "2. Decrypt and Read Ledger Stream"
-echo "3. Return to Master Control Deck"
-echo "========================================================="
-echo -n "Select operational vector [1-3]: "
-read op
-
-if [ "$op" -eq 1 ]; then
-    echo -e "\nEnter your system log text or data entry:"
-    read -r user_entry
-    
-    TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
-    LOG_LINE="[$TIMESTAMP] $user_entry"
-    
-    echo -n "Set Secret Transaction Passphrase: "
-    read -s password
-    echo
-    
-    # Extract, append, and re-lock the secure ledger binary file
-    (echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null; echo "$LOG_LINE") | \
-    openssl enc -chacha20 -salt -pbkdf2 -out "$DATA_FILE.tmp" -pass stdin 2>/dev/null
-    
-    mv "$DATA_FILE.tmp" "$DATA_FILE"
-    echo -e "\n[ SUCCESS ] Entry encrypted and synchronized to ledger storage."
-    echo "Press [Enter] to return..." ; read
-
-elif [ "$op" -eq 2 ]; then
-    echo -n -e "\nEnter Secret Master Passphrase to decrypt data: "
-    read -s password
-    echo
-    
-    echo -e "\n=================== DECRYPTED LEDGER LOGS ==================="
-    echo "$password" | openssl enc -chacha20 -d -salt -pbkdf2 -in "$DATA_FILE" 2>/dev/null
-    echo "============================================================="
-    echo "Press [Enter] to flush decrypted memory stream..." ; read
-fi
-

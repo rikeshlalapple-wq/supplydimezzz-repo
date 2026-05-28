@@ -1,13 +1,63 @@
 import os
 import datetime
+import zipfile
 
 ARCHIVE_DIR = "archive"
+DOWNLOADS_DIR = "/sdcard/Download"
 CATEGORIES = {
     "1": ("Legal & Case Binders (1-7)", "legal_binders"),
     "2": ("Supplydimezzz Business Logistics", "supplydimezzz"),
     "3": ("Genealogy & Historical Research", "genealogy"),
     "4": ("Personal Asset & Ledger Indices", "personal_assets")
 }
+
+def auto_import_zip():
+    print("\n---------------------------------------------------------")
+    print("          AUTOMATED ARCHIVE DISCOVERY ENGINE             ")
+    print("---------------------------------------------------------")
+    
+    if not os.path.exists(DOWNLOADS_DIR):
+        print("[!] Error: Cannot access Android Downloads directory.")
+        print("    Ensure 'termux-setup-storage' was granted permission.")
+        input("\nPress [Enter] to return...")
+        return
+
+    # Scan for zip files in the download folder
+    zip_files = [f for f in os.listdir(DOWNLOADS_DIR) if f.endswith('.zip')]
+    
+    if not zip_files:
+        print("[!] No '.zip' archive files found inside your Downloads folder.")
+        print("    Drop your zip file there and try again.")
+        input("\nPress [Enter] to return...")
+        return
+
+    print("[*] Detected archive packages in your phone's storage:")
+    for idx, filename in enumerate(zip_files, 1):
+        print(f" {idx}. {filename}")
+    print("---------------------------------------------------------")
+    
+    choice = input("[?] Select archive index number to dump: ").strip()
+    try:
+        selection_idx = int(choice) - 1
+        if selection_idx < 0 or selection_idx >= len(zip_files):
+            raise ValueError
+        target_zip = zip_files[selection_idx]
+    except (ValueError, IndexError):
+        print("[!] Invalid selection. Aborting import.")
+        input("\nPress [Enter] to return...")
+        return
+
+    full_zip_path = os.path.join(DOWNLOADS_DIR, target_zip)
+    print(f"\n[*] Extracting payload: {target_zip} -> {ARCHIVE_DIR}/")
+    
+    try:
+        with zipfile.ZipFile(full_zip_path, 'r') as zip_ref:
+            zip_ref.extractall(ARCHIVE_DIR)
+        print(f"[+ ] SUCCESS: Core payload fully extracted and integrated.")
+    except Exception as e:
+        print(f"[!] Extraction Error: {str(e)}")
+        
+    input("\nPress [Enter] to return...")
 
 def log_thought():
     print("\n---------------------------------------------------------")
@@ -24,11 +74,9 @@ def log_thought():
         return
         
     cat_name, folder = CATEGORIES[cat_choice]
-    
-    # Sub-specification for Legal Binders to keep the 7-binder array clear
     binder_tag = ""
     if cat_choice == "1":
-        binder_tag = input("[?] Enter Binder Number/Title (e.g., Binder 3 - Financials): ").strip()
+        binder_tag = input("[?] Enter Binder Number/Title (e.g., Binder 3): ").strip()
         binder_tag = f" | {binder_tag}" if binder_tag else ""
 
     print(f"\n[*] Routing data to -> {cat_name}")
@@ -62,7 +110,6 @@ def search_matrix():
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                        # Split by markdown headers to pull individual entries instead of whole files
                         entries = content.split("### ")
                         for entry in entries:
                             if query in entry.lower():
@@ -86,15 +133,18 @@ def main():
         print("=========================================================")
         print(" 1. Log and Route Document Entry")
         print(" 2. Query Full Operational Matrix (Deep Search)")
-        print(" 3. Return to Master Main Frame")
+        print(" 3. Auto-Import/Unzip Document Archive from Downloads")
+        print(" 4. Return to Master Main Frame")
         print("=========================================================")
-        choice = input("- Select vector [1-3]: ").strip()
+        choice = input("- Select vector [1-4]: ").strip()
         
         if choice == '1':
             log_thought()
         elif choice == '2':
             search_matrix()
         elif choice == '3':
+            auto_import_zip()
+        elif choice == '4':
             break
 
 if __name__ == "__main__":

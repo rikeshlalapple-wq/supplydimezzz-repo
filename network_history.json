@@ -1,0 +1,67 @@
+{
+    "10.0.0.1": {
+        "first_seen": "2026-05-22 17:21:37",
+        "last_seen": "2026-05-28 07:22:57",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.12": {
+        "first_seen": "2026-05-22 17:21:37",
+        "last_seen": "2026-05-24 01:15:40",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.57": {
+        "first_seen": "2026-05-22 17:21:37",
+        "last_seen": "2026-05-28 07:22:57",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.105": {
+        "first_seen": "2026-05-22 17:21:37",
+        "last_seen": "2026-05-28 07:22:57",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.121": {
+        "first_seen": "2026-05-22 17:21:37",
+        "last_seen": "2026-05-22 17:21:37",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.254": {
+        "first_seen": "2026-05-22 17:21:37",
+        "last_seen": "2026-05-28 07:22:57",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.101": {
+        "first_seen": "2026-05-24 00:44:39",
+        "last_seen": "2026-05-24 00:44:39",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.154": {
+        "first_seen": "2026-05-24 00:44:39",
+        "last_seen": "2026-05-24 01:15:40",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.155": {
+        "first_seen": "2026-05-24 00:44:39",
+        "last_seen": "2026-05-24 01:15:40",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.13": {
+        "first_seen": "2026-05-28 03:48:39",
+        "last_seen": "2026-05-28 07:22:57",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.122": {
+        "first_seen": "2026-05-28 03:48:39",
+        "last_seen": "2026-05-28 07:22:57",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.194": {
+        "first_seen": "2026-05-28 03:48:39",
+        "last_seen": "2026-05-28 07:22:57",
+        "hostname": "Unknown Device"
+    },
+    "10.0.0.169": {
+        "first_seen": "2026-05-28 07:10:00",
+        "last_seen": "2026-05-28 07:18:55",
+        "hostname": "Unknown Device"
+    }
+}

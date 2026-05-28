@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Orb Core :: Interactive Evidence Matrix</title>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background-color: #0a0a0a; color: #dcdcdc; padding: 15px; margin: 0; }
+        .header { text-align: center; border-bottom: 2px solid #222; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: #00ff66; margin: 5px 0; font-size: 1.5em; text-transform: uppercase; letter-spacing: 1px; }
+        .control-panel { max-width: 800px; margin: 0 auto 20px auto; background: #111; padding: 10px; border: 1px solid #222; border-radius: 4px; }
+        .section-label { font-size: 0.8em; color: #666; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .filter-group { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+        button { background: #222; color: #aaa; border: 1px solid #333; padding: 6px 12px; font-family: inherit; font-size: 0.85em; cursor: pointer; border-radius: 3px; transition: all 0.2s; }
+        button:hover { background: #333; color: #fff; }
+        button.active { background: #00ff66; color: #000; border-color: #00ff66; font-weight: bold; }
+        .timeline { position: relative; max-width: 800px; margin: 0 auto; padding-left: 20px; }
+        .timeline::before { content: ''; position: absolute; width: 2px; background-color: #222; top: 0; bottom: 0; left: 5px; }
+        .event-card { position: relative; background-color: #141414; border: 1px solid #222; border-left: 5px solid #555; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+        .event-card::before { content: ''; position: absolute; width: 8px; height: 8px; left: -21px; background-color: #0a0a0a; border: 2px solid #00ff66; top: 16px; border-radius: 50%; z-index: 1; }
+        .meta-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .date { font-weight: bold; color: #00ff66; font-size: 1.05em; }
+        .tag { background: #222; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; font-weight: bold; color: #00bcff; }
+        .badge { padding: 2px 6px; border-radius: 3px; font-size: 0.75em; font-weight: bold; color: #000; }
+        .desc { color: #a5a5a5; font-size: 0.95em; line-height: 1.4; word-wrap: break-word; }
+        .file-link { display: block; margin-top: 8px; font-size: 0.75em; color: #555; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Evidence Mapping Timeline</h1>
+        <div style="font-size: 0.8em; color: #444;">ORB CORE WORKSTATION MATRIX</div>
+    </div>
+
+    <div class="control-panel">
+        <div class="section-label">Confidence Filters</div>
+        <div class="filter-group">
+            <button class="filter-btn active" id="conf-all" onclick="filterConfidence('ALL')">ALL SCENARIOS</button>
+            <button class="filter-btn" onclick="filterConfidence('HIGH')">HIGH CONFIDENCE</button>
+            <button class="filter-btn" onclick="filterConfidence('MED')">MED CONFIDENCE</button>
+            <button class="filter-btn" onclick="filterConfidence('LOW')">LOW CONFIDENCE</button>
+        </div>
+        <div class="section-label">Scenario Group Filters</div>
+        <div class="filter-group">
+            <button class="filter-btn active" id="tag-all" onclick="filterTag('ALL')">ALL TAGS</button>
+            <button class="filter-btn" onclick="filterTag('COMM')">#COMM</button><button class="filter-btn" onclick="filterTag('FINANCIAL')">#FINANCIAL</button><button class="filter-btn" onclick="filterTag('SYSTEM')">#SYSTEM</button><button class="filter-btn" onclick="filterTag('XFINITY')">#XFINITY</button>
+        </div>
+    </div>
+
+    <div class='timeline'>
+    
+        <div class="event-card" data-confidence="HIGH" data-tag="FINANCIAL" style="border-left-color: #2ecc71;">
+            <div class="meta-line">
+                <div>
+                    <span class="date">2026-05-15</span>
+                    <span class="tag">#FINANCIAL</span>
+                </div>
+                <span class="badge" style="background-color: #2ecc71;">HIGH</span>
+            </div>
+            <div class="desc">BankStatementLog</div>
+            <div class="file-link">File: 2026-05-15_FINANCIAL_HIGH_BankStatementLog.png</div>
+        </div>
+        
+        <div class="event-card" data-confidence="HIGH" data-tag="COMM" style="border-left-color: #2ecc71;">
+            <div class="meta-line">
+                <div>
+                    <span class="date">2026-05-15</span>
+                    <span class="tag">#COMM</span>
+                </div>
+                <span class="badge" style="background-color: #2ecc71;">HIGH</span>
+            </div>
+            <div class="desc">InitialTimelineChatLog</div>
+            <div class="file-link">File: 2026-05-15_COMM_HIGH_InitialTimelineChatLog.png</div>
+        </div>
+        
+        <div class="event-card" data-confidence="HIGH" data-tag="SYSTEM" style="border-left-color: #2ecc71;">
+            <div class="meta-line">
+                <div>
+                    <span class="date">2026-05-28</span>
+                    <span class="tag">#SYSTEM</span>
+                </div>
+                <span class="badge" style="background-color: #2ecc71;">HIGH</span>
+            </div>
+            <div class="desc">InitialWorkstationTimelineTest</div>
+            <div class="file-link">File: 2026-05-28_SYSTEM_HIGH_InitialWorkstationTimelineTest.png</div>
+        </div>
+        
+        <div class="event-card" data-confidence="HIGH" data-tag="XFINITY" style="border-left-color: #2ecc71;">
+            <div class="meta-line">
+                <div>
+                    <span class="date">2026-05-28</span>
+                    <span class="tag">#XFINITY</span>
+                </div>
+                <span class="badge" style="background-color: #2ecc71;">HIGH</span>
+            </div>
+            <div class="desc">NetworkHotspotLogAudit</div>
+            <div class="file-link">File: 2026-05-28_XFINITY_HIGH_NetworkHotspotLogAudit.png</div>
+        </div>
+        
+    </div>
+
+    <script>
+        let currentConf = 'ALL';
+        let currentTag = 'ALL';
+
+        function filterConfidence(conf) {
+            currentConf = conf;
+            updateButtons('confidence', conf);
+            applyMatrixFilters();
+        }
+
+        function filterTag(tag) {
+            currentTag = tag;
+            updateButtons('tag', tag);
+            applyMatrixFilters();
+        }
+
+        function updateButtons(type, value) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                const onClickStr = btn.getAttribute('onclick');
+                if (type === 'confidence' && onClickStr.includes('filterConfidence')) {
+                    btn.classList.remove('active');
+                    if (onClickStr.includes(`'${value}'`) || (value === 'ALL' && onClickStr.includes('ALL'))) btn.classList.add('active');
+                }
+                if (type === 'tag' && onClickStr.includes('filterTag')) {
+                    btn.classList.remove('active');
+                    if (onClickStr.includes(`'${value}'`) || (value === 'ALL' && onClickStr.includes('ALL'))) btn.classList.add('active');
+                }
+            });
+        }
+
+        function applyMatrixFilters() {
+            const cards = document.querySelectorAll('.event-card');
+            cards.forEach(card => {
+                const cMatch = (currentConf === 'ALL' || card.dataset.confidence === currentConf);
+                const tMatch = (currentTag === 'ALL' || card.dataset.tag === currentTag);
+                
+                if (cMatch && tMatch) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

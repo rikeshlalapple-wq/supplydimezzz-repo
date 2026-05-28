@@ -1,0 +1,11 @@
+# ==================================================
+# MASTER SUITE ENVIRONMENT CONFIGURATION
+# ==================================================
+export DATA_FILE=".secure_ledger.dat"
+export BACKUP_DIR="./secure_archives"
+export SCAN_DIR="./network_audits"
+export TOR_PROXY="127.0.0.1:9050"
+
+# Auto-detect native network configurations dynamically
+export LOCAL_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+' || echo "127.0.0.1")
+export SUBNET=$(echo "$LOCAL_IP" | cut -d'.' -f1-3)".0/24"

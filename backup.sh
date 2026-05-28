@@ -1,40 +1,50 @@
 #!/bin/bash
-# Localized Secure Backup Archive Pipeline
+source .env
 
-BACKUP_DIR="./secure_archives"
-DATA_FILE=".secure_ledger.dat"
+BACKUP_DIR="backups"
+TIMESTAMP=$(date "+%Y-%m-%d_%H%M%S")
+TARBALL="$BACKUP_DIR/orb_core_snapshot_$TIMESTAMP.tar.gz"
 
 clear
-echo "=================================================="
-echo "     SECURE DATA ARCHIVE AUTOMATION PIPELINE      "
-echo "=================================================="
+echo "========================================================="
+echo "          ORB CORE :: SYSTEM MIRROR BACKUP SUITE         "
+echo "========================================================="
+echo "[*] Initializing perimeter workspace snapshot..."
 
-# Create the archive repository directory if it doesn't exist yet
-if [ ! -d "$BACKUP_DIR" ]; then
-    mkdir -p "$BACKUP_DIR"
-    echo "Initializing dedicated secure archive directory..."
-fi
+# 1. Ensure the backup container directory exists locally
+mkdir -p "$BACKUP_DIR"
 
-# Verify the database ledger actually has data before running backup
-if [ ! -f "$DATA_FILE" ]; then
-    echo "CRITICAL ERROR: No ledger database found to archive."
+# 2. Package and compress all critical workstation components
+echo "[*] Compressing active code modules and document matrices..."
+tar -czf "$TARBALL" \
+    "archive/" \
+    "ledger.sh" \
+    "net_scanner.py" \
+    "thought_stream.py" \
+    "run_orb.sh" \
+    ".env" \
+    .ledger_verify \
+    2>/dev/null
+
+if [ -f "$TARBALL" ]; then
+    echo "[+] Local snapshot created successfully: $TARBALL"
+else
+    echo "[!] CRITICAL ERROR: Failed to compress snapshot archive."
+    echo "Press [Enter] to return..." ; read
     exit 1
 fi
 
-echo "Scanning operational volumes..."
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_NAME="ledger_snapshot_$TIMESTAMP.tar.gz"
+# 3. Storage Protection Loop: Retain only the last 5 backup sets
+echo "[*] Checking storage rotation vectors..."
+ls -tp $BACKUP_DIR/orb_core_snapshot_*.tar.gz 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null
 
-echo "Compressing and locking target matrix rows..."
-# Tar and gzip the hidden data file cleanly into the archive folder
-tar -czf "$BACKUP_DIR/$BACKUP_NAME" "$DATA_FILE" 2>/dev/null
+# 4. Cloud Repository Synchronization Loop
+echo "[*] Initializing remote cloud repository synchronization..."
+git add .
+git commit -m "Automated system mirror backup sequence [Snapshot: $TIMESTAMP]" 2>/dev/null
+git push
 
-if [ $? -eq 0 ]; then
-    echo "--------------------------------------------------"
-    echo -e "SUCCESS: Archive snapshot deployed flawlessly."
-    echo "FILE: $BACKUP_DIR/$BACKUP_NAME"
-    echo "--------------------------------------------------"
-else
-    echo "CRITICAL ERROR: Backup pipe failed during compression."
-fi
-
+echo "========================================================="
+echo "[ SUCCESS ] Workspace mirror fully synchronized and archived."
+echo "========================================================="
+echo "Press [Enter] to return to Master Control Deck..." ; read

@@ -7,39 +7,23 @@ while true; do
     echo "========================================================="
     echo " 1. Execute Hardened Security Ledger      [ledger.sh]"
     echo " 2. Launch Dynamic Perimeter Net Scanner  [net_scanner.py]"
-    echo " 3. Run System Mirror Backup Suite       [backup.sh]"
-    echo " 4. Exit Workstation Environment"
+    echo " 3. Access Cognitive Thought Stream       [thought_stream.py]"
+    echo " 4. Run System Mirror Backup Suite       [backup.sh]"
+    echo " 5. Exit Workstation Environment"
     echo "========================================================="
-    echo -n "Select master operational vector [1-4]: "
+    echo -n "Select master operational vector [1-5]: "
     read choice
 
     case $choice in
         1)
-            if [ -f "./ledger.sh" ]; then
-                bash ./ledger.sh
-            else
-                echo -e "\n[!] Error: ledger.sh missing from root tree."
-                echo "Press [Enter] to return..." ; read
-            fi
-            ;;
+            bash ./ledger.sh ;;
         2)
-            if [ -f "./net_scanner.py" ]; then
-                echo -e "\n[*] Initializing Network Environment..."
-                python ./net_scanner.py
-            else
-                echo -e "\n[!] Error: net_scanner.py missing from root tree."
-                echo "Press [Enter] to return..." ; read
-            fi
-            ;;
+            python ./net_scanner.py ;;
         3)
-            if [ -f "./backup.sh" ]; then
-                bash ./backup.sh
-            else
-                echo -e "\n[*] PHASE PREVIEW: Backup automation loop configuration is next."
-                echo "Press [Enter] to return..." ; read
-            fi
-            ;;
+            python ./thought_stream.py ;;
         4)
+            bash ./backup.sh ;;
+        5)
             echo -e "\n[*] Disengaging Master Control Deck stream cleanly. Standby."
             exit 0
             ;;
